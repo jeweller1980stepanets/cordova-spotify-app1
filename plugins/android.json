@@ -1,0 +1,18 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "com.procoders.cordovatestapp"
+        },
+        "cordova.plugin.spotify": {
+            "PACKAGE_NAME": "com.procoders.cordovatestapp"
+        }
+    },
+    "dependent_plugins": {}
+}
