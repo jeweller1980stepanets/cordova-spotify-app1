@@ -43,6 +43,12 @@ public class SpotifyPlugin extends CordovaPlugin implements
     private static final String ACTION_PLAY = "play";
     private static final String ACTION_PAUSE = "pause";
     private static final String ACTION_RESUME = "resume";
+    private static final String ACTION_NEXT = "next";
+    private static final String ACTION_PREV = "prev";
+    private static final String ACTION_PLAY_ALBUM = "playAlbum";
+    private static final String ACTION_PLAY_PLAYLIST = "playPlayList";
+    private static final String ACTION_LOG_OUT = "logout";
+
 
     private static final int REQUEST_CODE = 1337;
 
@@ -113,6 +119,35 @@ public class SpotifyPlugin extends CordovaPlugin implements
         } else if(ACTION_RESUME.equalsIgnoreCase(action)) {
             this.resume();
             success = true;
+        } else if(ACTION_NEXT.equalsIgnoreCase(action)){
+            this.next();
+            success = true;
+        } else if(ACTION_PREV.equalsIgnoreCase(action)){
+            this.prev();
+            success=true;
+        }else if(ACTION_PLAY_ALBUM.equalsIgnoreCase(action)){
+            String uri = "";
+
+            try {
+                uri = data.getString(0);
+            } catch(JSONException e) {
+                Log.e(TAG, e.toString());
+            }
+            this.playAlbum(uri);
+            success = true;
+        }else if(ACTION_PLAY_PLAYLIST.equalsIgnoreCase(action)){
+            String uri = "";
+
+            try {
+                uri = data.getString(0);
+            } catch(JSONException e) {
+                Log.e(TAG, e.toString());
+            }
+            this.playPlayList(uri);
+            success=true;
+        }else if(ACTION_LOG_OUT.equalsIgnoreCase(action)){
+            this.logout();
+            success = true;
         }
 
 
@@ -147,20 +182,7 @@ public class SpotifyPlugin extends CordovaPlugin implements
     //manualMode -- If you set manualMode = true, the login process will generate a CODE instead of a TOKEN, so you can manually refresh and obtain a refresh
     //token. AGAIN : YOU MUST OBTAIN A ACCESS TOKEN MANUALLY IF you SET THiS TO TRUE
     private void login(JSONArray scopes, Boolean fetchTokenManually) {
-       /* AuthenticationResponse.Type authType = fetchTokenManually ? AuthenticationResponse.Type.CODE :AuthenticationResponse.Type.TOKEN;
 
-
-        AuthenticationRequest.Builder builder = new AuthenticationRequest.Builder(clientId,
-                authType,
-                redirectUri);
-        builder.setScopes(new String[]{"user-read-private", "streaming"});
-        builder.setShowDialog(true);
-        AuthenticationRequest request = builder.build();
-
-        Log.d(TAG, "Client ID " + clientId + "AUTH RESPONSE TYPE " + AuthenticationResponse.Type.TOKfinal AuthenticationRequest request = new AuthenticationRequest.Builder(CLIENT_ID, AuthenticationResponse.Type.TOKEN, REDIRECT_URI)
-                .setScopes(new String[]{"user-read-private", "playlist-read", "playlist-read-private", "streaming"})
-                .build();EN + "REDIRECT URI " + redirectUri + " Scopes " + scopes + " manual " + fetchTokenManually);
-*/
         final AuthenticationRequest request = new AuthenticationRequest.Builder(clientId, fetchTokenManually ? AuthenticationResponse.Type.CODE :AuthenticationResponse.Type.TOKEN, redirectUri)
                 .setScopes(new String[]{"user-read-private", "playlist-read", "playlist-read-private", "streaming"})
                 .build();
@@ -184,9 +206,24 @@ public class SpotifyPlugin extends CordovaPlugin implements
         currentPlayer = null;
     }
 
+    public   void playAlbum(String id){
+        Log.d(TAG, "PLAYING ALBUM");
+        this.play(id);
+    }
 
+    public   void playPlayList(String id){
+        Log.d(TAG, "PLAYING playListPlay");
+        this.play(id);
+    }
+public  void next(){
+    Log.d(TAG,"NEXT java");
+    currentPlayer.skipToNext(mOperationCallback);
 
-
+}
+public void prev(){
+    Log.d(TAG,"PREV java");
+    currentPlayer.skipToPrevious(mOperationCallback);
+}
     private void play(String uri) {
         Log.i(TAG, "Play: Is logged in -" + isLoggedIn + "Current Access" + currentAccessToken + "Current player" + currentPlayer);
         if(clientId == null || isLoggedIn == false || currentAccessToken == null || currentPlayer == null) return;
@@ -201,18 +238,19 @@ public class SpotifyPlugin extends CordovaPlugin implements
         currentPlayer.playUri(mOperationCallback, uri,0,0);
     }
 
-    private void getPlayerState() {
+
+   /* private void getPlayerState() {
         mCurrentPlaybackState =  currentPlayer.getPlaybackState();
 
                 Log.i(TAG, "Player State" + mCurrentPlaybackState.toString());
 
 
-    }
+    }*/
 
     private void pause() {
         if(clientId == null || isLoggedIn == false || currentAccessToken == null || currentPlayer == null) return;
 
-        currentPlayer.pause(mOperationCallback);
+       currentPlayer.pause(mOperationCallback);
     }
 
     private void resume() {

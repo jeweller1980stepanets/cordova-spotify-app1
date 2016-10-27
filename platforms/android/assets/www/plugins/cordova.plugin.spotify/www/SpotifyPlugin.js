@@ -22,6 +22,42 @@ var Spotify  = {
       []
     )
   },
+  next : function(){
+            cordova.exec(
+                function() {console.log("!!!!!!OK PREV js!!!!!!!!!!!!!!")},
+                function() {console.log("!!!!!!ERROR PREV js!!!!!!!!!!!!!!")},
+                "SpotifyPlugin",
+                "next",
+                []
+              )
+      },
+  prev : function(){
+                cordova.exec(
+                    function() {console.log("!!!!!!OK PREV js!!!!!!!!!!!!!!")},
+                    function() {console.log("!!!!!!ERROR PREV js!!!!!!!!!!!!!!")},
+                    "SpotifyPlugin",
+                    "prev",
+                    []
+                  )
+          },
+  playAlbum : function(albumId) {
+              cordova.exec(
+                function() {},
+                function() {},
+                "SpotifyPlugin",
+                "playAlbum",
+                [albumId]
+              )
+            },
+  playPlayList : function(playListId) {
+                        cordova.exec(
+                          function() {},
+                          function() {},
+                          "SpotifyPlugin",
+                          "playPlayList",
+                          [playListId]
+                        )
+                      },
   resume : function() {
     cordova.exec(
       function() {},
@@ -47,7 +83,7 @@ var Spotify  = {
         [scopes, fetchTokenManually]
       )
     },
-    logout : function(success) {
+  logout : function(success) {
 
       cordova.exec(
         success || function() {},

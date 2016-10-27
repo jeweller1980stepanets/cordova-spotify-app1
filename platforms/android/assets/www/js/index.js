@@ -51,10 +51,15 @@ var app = {
 
         };
         document.getElementById('log').addEventListener('click',function(){Spotify.login(options);});
-                document.getElementById('play').addEventListener('click',function(){Spotify.play("spotify:track:6KywfgRqvgvfJc3JRwaZdZ");});
-                document.getElementById('pause').addEventListener('click',function(){Spotify.pause();});
-                document.getElementById('resume').addEventListener('click',function(){Spotify.resume();});
+        document.getElementById('play').addEventListener('click',function(){Spotify.play("spotify:track:6KywfgRqvgvfJc3JRwaZdZ");});
+        document.getElementById('pause').addEventListener('click',function(){Spotify.pause();});
+        document.getElementById('resume').addEventListener('click',function(){Spotify.resume();});
 
+        document.getElementById('next').addEventListener('click',function(){Spotify.next();});
+        document.getElementById('prev').addEventListener('click',function(){Spotify.prev();});
+        document.getElementById('album').addEventListener('click',function(){Spotify.playAlbum("spotify:album:2lYmxilk8cXJlxxXmns1IU");});
+        document.getElementById('playlist').addEventListener('click',function(){Spotify.playPlayList("spotify:user:spotify:playlist:2yLXxKhhziG2xzy7eyD4TD");});
+        document.getElementById('logout').addEventListener('click',function(){Spotify.logout();});
     }
 };
 
