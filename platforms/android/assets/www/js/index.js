@@ -45,6 +45,16 @@ var app = {
         receivedElement.setAttribute('style', 'display:block;');
 
         console.log('Received Event: ' + id);
+
+        var options={
+            scope:[]
+
+        };
+        document.getElementById('log').addEventListener('click',function(){Spotify.login(options);});
+                document.getElementById('play').addEventListener('click',function(){Spotify.play("spotify:track:6KywfgRqvgvfJc3JRwaZdZ");});
+                document.getElementById('pause').addEventListener('click',function(){Spotify.pause();});
+                document.getElementById('resume').addEventListener('click',function(){Spotify.resume();});
+
     }
 };
 

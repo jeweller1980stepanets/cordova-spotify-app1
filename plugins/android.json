@@ -12,6 +12,13 @@
         },
         "cordova.plugin.spotify": {
             "PACKAGE_NAME": "com.procoders.cordovatestapp"
+        },
+        "cordova-plugin-customurlscheme": {
+            "URL_SCHEME": "mycoolapp",
+            "ANDROID_SCHEME": " ",
+            "ANDROID_HOST": " ",
+            "ANDROID_PATHPREFIX": "/",
+            "PACKAGE_NAME": "com.procoders.cordovatestapp"
         }
     },
     "dependent_plugins": {}

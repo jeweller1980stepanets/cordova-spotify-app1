@@ -7,6 +7,9 @@
     <feature name="SpotifyPlugin">
         <param name="android-package" value="cordova.plugin.spotify.SpotifyPlugin" />
     </feature>
+    <feature name="LaunchMyApp">
+        <param name="android-package" value="nl.xservices.plugins.LaunchMyApp" />
+    </feature>
     <name>Spotify</name>
     <description>
         A sample Apache Cordova application that responds to the deviceready event.
