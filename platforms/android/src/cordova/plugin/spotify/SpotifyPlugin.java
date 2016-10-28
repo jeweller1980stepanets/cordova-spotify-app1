@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Debug;
+import android.os.Handler;
 import android.util.Log;
 
 import org.apache.cordova.CallbackContext;
@@ -18,10 +19,12 @@ import org.json.JSONObject;
 import com.spotify.sdk.android.authentication.AuthenticationClient;
 import com.spotify.sdk.android.authentication.AuthenticationRequest;
 import com.spotify.sdk.android.authentication.AuthenticationResponse;
+import com.spotify.sdk.android.player.AudioController;
 import com.spotify.sdk.android.player.Config;
 
 import com.spotify.sdk.android.player.Connectivity;
 import com.spotify.sdk.android.player.Error;
+import com.spotify.sdk.android.player.Metadata;
 import com.spotify.sdk.android.player.PlaybackState;
 import com.spotify.sdk.android.player.PlayerEvent;
 import com.spotify.sdk.android.player.Spotify;
@@ -31,6 +34,7 @@ import com.spotify.sdk.android.player.SpotifyPlayer;
 
 
 import java.net.URL;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Created by Paul on 4/4/2016.
@@ -48,7 +52,9 @@ public class SpotifyPlugin extends CordovaPlugin implements
     private static final String ACTION_PLAY_ALBUM = "playAlbum";
     private static final String ACTION_PLAY_PLAYLIST = "playPlayList";
     private static final String ACTION_LOG_OUT = "logout";
-
+    private static final String ACTION_SEEK = "seek";
+    private static final String ACTION_VOLUME = "setVolume";
+    private static final String METHOD_SEND_TO_JS_OBJ = "Spotify.Events.";
 
     private static final int REQUEST_CODE = 1337;
 
@@ -63,6 +69,9 @@ public class SpotifyPlugin extends CordovaPlugin implements
     private SpotifyPlayer currentPlayer;
     private PlaybackState mCurrentPlaybackState;
 
+    private Metadata mMetaData;
+
+    private CordovaWebView mWebView;
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         Log.i(TAG, "Initializing...");
@@ -83,7 +92,7 @@ public class SpotifyPlugin extends CordovaPlugin implements
     }
 
     @Override
-    public boolean execute(String action, JSONArray data, CallbackContext callbackContext) {
+    public boolean execute(String action, JSONArray data, CallbackContext callbackContext)  {
         Boolean success = false;
 
         if(ACTION_LOGIN.equalsIgnoreCase(action)) {
@@ -148,10 +157,35 @@ public class SpotifyPlugin extends CordovaPlugin implements
         }else if(ACTION_LOG_OUT.equalsIgnoreCase(action)){
             this.logout();
             success = true;
+        } else if(ACTION_SEEK.equalsIgnoreCase(action)){
+            int   val=0;
+            try {
+                val = data.getInt(0);
+            } catch(JSONException e) {
+                Log.e(TAG, e.toString());
+            }
+Log.d(TAG, String.valueOf(val));
+           this.seek(val);
+            success = true;
+        } else if(ACTION_VOLUME.equalsIgnoreCase(action)){
+            this.setVolume();
+            success = true;
         }
 
 
         return success;
+    }
+
+    private void setVolume() {
+        //TODO: implement it
+    }
+
+    private void seek(int val) {
+        //final String durationStr = String.format(" (%dms)", mMetadata.currentTrack.durationMs);
+        mMetaData = currentPlayer.getMetadata();
+final long dur = mMetaData.currentTrack.durationMs;
+        currentPlayer.seekToPosition(mOperationCallback,(int)dur*val/100);
+        Log.d(TAG,mMetaData.toString());
     }
 
     private final Player.NotificationCallback mNotificationCallback = new Player.NotificationCallback(){
@@ -381,13 +415,128 @@ public void prev(){
         super.onDestroy();
     }
 
+
+    private static final String EVENT_AUDIO_FLASH = "kSpPlaybackEventAudioFlush";
+
+    private static final String EVENT_DELIVERY_DOUN = "kSpPlaybackNotifyAudioDeliveryDone";
+
+    private static final String EVENT_BECAME_ACTIVE ="kSpPlaybackNotifyBecameActive";
+    private static final String EVENT_BECAME_INACTIVE = "kSpPlaybackNotifyBecameInactive";
+    private static final String EVENT_CONTEXT_CHANGED ="kSpPlaybackNotifyContextChanged";
+    private static final String EVENT_LOST_PERMISSION = "kSpPlaybackNotifyLostPermission";
+    private static final String EVENT_METADATA_CHANGED = "kSpPlaybackNotifyMetadataChanged";
+    private static final String EVENT_NOTIFY_NEXT ="kSpPlaybackNotifyNext";
+    private static final String EVENT_NOTIFY_PAUSE = "kSpPlaybackNotifyPause";
+    private static final String EVENT_NOTIFY_PLAY ="kSpPlaybackNotifyPlay";
+    private static final String EVENT_NOTIFY_PREV = "kSpPlaybackNotifyPrev";
+    private static final String EVENT_REPEAT_OFF="kSpPlaybackNotifyRepeatOff";
+    private static final String EVENT_REPEAT_ON="kSpPlaybackNotifyRepeatOn";
+    private static final String EVENT_SHUFLE_OFF="kSpPlaybackNotifyShuffleOff";
+    private static final String EVENT_SHUFLE_ON = "kSpPlaybackNotifyShuffleOn";
+    private static final String EVENT_TRACK_CHANGED = "kSpPlaybackNotifyTrackChanged";
+    private static final String EVENT_TRACK_DELIVERED = "kSpPlaybackNotifyTrackDelivered";
+
     @Override
     public void onPlaybackEvent(PlayerEvent playerEvent) {
+        mMetaData = currentPlayer.getMetadata();
+        mCurrentPlaybackState = currentPlayer.getPlaybackState();
+        JSONArray array = new JSONArray();
+
         Log.d("MainActivity", "Playback event received: " + playerEvent.name());
+
+        if(playerEvent.name().equals(EVENT_NOTIFY_PAUSE)){
+            Log.d(TAG,"player paused");
+        } else if(playerEvent.name().equals(EVENT_NOTIFY_NEXT)){
+            Log.d(TAG,"player next");
+        } else if(playerEvent.name().equals(EVENT_NOTIFY_PREV)){
+            Log.d(TAG,"player prev");
+        } else if(playerEvent.name().equals(EVENT_NOTIFY_PLAY)){
+            Log.d(TAG,"player play");
+        } else if(playerEvent.name().equals(EVENT_AUDIO_FLASH)){
+            Log.d(TAG,"player audio flush" + mCurrentPlaybackState.positionMs + "ms");
+        } else if(playerEvent.name().equals(EVENT_METADATA_CHANGED)){
+            Log.d(TAG,"player metadata changed" + mMetaData);
+            array.put(mMetaData.currentTrack.name);
+            array.put(mMetaData.currentTrack.artistName);
+            array.put(mMetaData.currentTrack.albumName);
+
+            sendUpdate(EVENT_METADATA_CHANGED,new Object[]{array});
+
+        } else if(playerEvent.name().equals(EVENT_CONTEXT_CHANGED)){
+            Log.d(TAG,"player context changed " + mMetaData.contextName);
+        } else if(playerEvent.name().equals(EVENT_DELIVERY_DOUN)) {
+            Log.d(TAG, "player EVENT_DELIVERY_DOUN ");
+
+        }else if(playerEvent.name().equals(EVENT_BECAME_ACTIVE)) {
+            Log.d(TAG, "player EVENT_BECAME_ACTIVE ");
+
+        }else if(playerEvent.name().equals(EVENT_BECAME_INACTIVE)) {
+            Log.d(TAG, "player EVENT_BECAME_INACTIVE ");
+
+        }else if(playerEvent.name().equals(EVENT_LOST_PERMISSION)) {
+            Log.d(TAG, "player EVENT_LOST_PERMISSION ");
+
+        }else if(playerEvent.name().equals(EVENT_REPEAT_OFF)) {
+            Log.d(TAG, "player EVENT_REPEAT_OFF ");
+
+        }else if(playerEvent.name().equals(EVENT_REPEAT_ON)) {
+            Log.d(TAG, "player EVENT_REPEAT_ON ");
+
+        }else if(playerEvent.name().equals(EVENT_SHUFLE_OFF)) {
+            Log.d(TAG, "player EVENT_SHUFLE_OFF ");
+
+        }else if(playerEvent.name().equals(EVENT_SHUFLE_ON)) {
+            Log.d(TAG, "player EVENT_SHUFLE_ON ");
+
+        }else if(playerEvent.name().equals(EVENT_TRACK_CHANGED)) {
+            Log.d(TAG, "player EVENT_TRACK_CHANGED " + mMetaData.currentTrack.name);
+
+        }else if(playerEvent.name().equals(EVENT_TRACK_DELIVERED)) {
+            Log.d(TAG, "player EVENT_TRACK_DELIVERED ");
+
+        }
+        // Remember kids, always use the English locale when changing case for non-UI strings!
+        // Otherwise you'll end up with mysterious errors when running in the Turkish locale.
+        // See: http://java.sys-con.com/node/46241
+       /* Log.d(TAG,"Event: " + playerEvent);
+        Log.d(TAG,"mCurrentPlaybackState = " + mCurrentPlaybackState);
+
+        Log.i(TAG, "Metadata: " + mMetaData);
+
+        final long pos = mCurrentPlaybackState.positionMs;
+        Log.d(TAG,"position = " + pos + "MS");*/
     }
 
     @Override
     public void onPlaybackError(Error error) {
         Log.d("MainActivity", "Playback error received: " + error.name());
     }
+    public void sendUpdate(final String action, final Object[] params) {
+        String method = String.format("%s%s", METHOD_SEND_TO_JS_OBJ, action);
+        final StringBuilder jsCommand = new StringBuilder();
+
+        jsCommand.append("javascript:").append(method).append("(");
+        int nbParams = params.length;
+        for (int i = 0; i < nbParams;) {
+            jsCommand.append(params[i++]);
+            if (i != nbParams) {
+                jsCommand.append(",");
+            }
+        }
+        jsCommand.append(")");
+
+        Log.d(TAG, "sendUpdate jsCommand : " + jsCommand.toString());
+
+        mWebView.getView().post(new Runnable(){
+            public void run(){
+
+                mWebView.loadUrl(jsCommand.toString());
+
+            }
+        });
+
+    }
+
+
+
 }

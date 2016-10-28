@@ -92,6 +92,15 @@ var Spotify  = {
         "logout",
         []
       )
+    },
+    seek : function(val){
+        cordova.exec(
+        function() {},
+        function() {},
+        "SpotifyPlugin",
+        "seek",
+        [val]
+        )
     }
 };
 exports = Spotify;
